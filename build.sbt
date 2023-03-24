@@ -12,4 +12,4 @@ libraryDependencies += "com.typesafe.akka" %% "akka-actor-typed" % "2.8.0"
 // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
 libraryDependencies += "org.slf4j" % "slf4j-api" % "2.0.7"
 // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
-libraryDependencies += "org.slf4j" % "slf4j-simple" % "2.0.7" % Test
+libraryDependencies += "org.slf4j" % "slf4j-simple" % "2.0.7"

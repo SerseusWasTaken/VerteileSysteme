@@ -2,12 +2,15 @@ package actors
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import Consumer.{Numbers, Result}
+import Consumer.{ByteSeq, Result}
 
 object Store {
   sealed trait Command
+
   case class Get(replyTo: ActorRef[Result], key: Seq[Byte]) extends Command
+
   case class Set(replyTo: ActorRef[Result], key: Seq[Byte], value: Seq[Byte]) extends Command
+
   def apply(): Behavior[Store.Command] = {
     Behaviors.setup { context =>
       new Store(context)
@@ -16,18 +19,29 @@ object Store {
 }
 
 class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store.Command](context) {
+
   import Store._
 
-  val data = scala.collection.mutable.Map[Seq[Byte], Seq[Byte]]()
+  private val data = scala.collection.mutable.Map[Seq[Byte], Seq[Byte]]()
+
   override def onMessage(msg: Store.Command): Behavior[Store.Command] = msg match {
     case Get(replyTo, key) =>
-      context.log.info(s"Recieved message to get key: $key")
-      replyTo ! Numbers(data(key))
-      Behaviors.same
+      val keyAsString = new String(key.toArray)
+      context.log.info(s"Recieved message to get key: $key($keyAsString)")
+      val value = data.get(key)
+      if (value.isEmpty) {
+        context.log.info(s"Value of key $key($keyAsString) not found")
+        Behaviors.same
+      } else {
+        replyTo ! ByteSeq(value.get)
+        Behaviors.same
+      }
     case Set(replyTo, key, value) =>
-      context.log.info(s"Adding values: key: $key, value: $value ")
+      val keyAsString = new String(key.toArray)
+      val valueAsString = new String(value.toArray)
+      context.log.info(s"Adding values: key: $key($keyAsString), value: $value($valueAsString)")
       data.addOne(key, value)
-      replyTo ! Numbers(data(key))
+      replyTo ! ByteSeq(data(key))
       Behaviors.same
   }
 }

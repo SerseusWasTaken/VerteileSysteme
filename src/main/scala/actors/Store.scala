@@ -27,10 +27,10 @@ class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store
   override def onMessage(msg: Store.Command): Behavior[Store.Command] = msg match {
     case Get(replyTo, key) =>
       val keyAsString = new String(key.toArray)
-      context.log.info(s"Recieved message to get key: $key($keyAsString)")
+      context.log.info(s"Received message to get key: $keyAsString")
       val value = data.get(key)
       if (value.isEmpty) {
-        context.log.info(s"Value of key $key($keyAsString) not found")
+        context.log.info(s"Value of key $keyAsString not found")
         Behaviors.same
       } else {
         replyTo ! ByteSeq(value.get)
@@ -39,7 +39,7 @@ class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store
     case Set(replyTo, key, value) =>
       val keyAsString = new String(key.toArray)
       val valueAsString = new String(value.toArray)
-      context.log.info(s"Adding values: key: $key($keyAsString), value: $value($valueAsString)")
+      context.log.info(s"Received message to set values: key: $keyAsString, value: $valueAsString")
       data.addOne(key, value)
       replyTo ! ByteSeq(data(key))
       Behaviors.same

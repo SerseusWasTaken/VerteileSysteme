@@ -26,7 +26,7 @@ class Client(val store: ActorRef[Store.Command], context: ActorContext[Command])
       store ! Store.Get(consumer, stringToByteSeq(key))
       Behaviors.same
     case Set(key, value) =>
-      context.log.info(s"Recieved message to add values key: $key and value: $value")
+      context.log.info(s"Recieved command to add values key: $key and value: $value")
       val consumer = context.spawnAnonymous(Consumer())
       store ! Store.Set(consumer, stringToByteSeq(key), stringToByteSeq(value))
       Behaviors.same

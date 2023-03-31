@@ -2,6 +2,10 @@ package actors
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+
+import java.io
+import java.io.BufferedReader
+import java.util.Scanner
 import scala.io.Source
 
 object FileReader {
@@ -23,16 +27,12 @@ class FileReader(context: ActorContext[FileReader.Message]) extends AbstractBeha
   override def onMessage(msg: FileReader.Message): Behavior[FileReader.Message] = msg match {
     case File(filename, client) =>
       context.log.info(s"Recieved message to read file $filename")
-      val readFile = Source.fromFile(filename)
-      val lines = readFile.getLines().toList
-      readFile.close()
-      val separated = lines.map { s =>
-        val splitString = s.split(",")
-        (splitString(0), splitString(1))
+      val scanner = new Scanner(new io.FileReader(filename))
+      while(scanner.hasNext()) {
+        val sep = scanner.nextLine().split(",")
+        client ! Client.Set(sep(0), sep(1))
       }
-      separated.foreach { value =>
-        client ! Client.Set(value._1, value._2)
-      }
+      scanner.close()
       Behaviors.same
   }
 }

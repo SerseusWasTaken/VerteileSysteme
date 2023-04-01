@@ -2,7 +2,7 @@ package actors
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import Consumer.{ByteSeq, Result}
+import Consumer.{ByteSeq, Error, Result}
 
 object Store {
   sealed trait Command
@@ -26,20 +26,15 @@ class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store
 
   override def onMessage(msg: Store.Command): Behavior[Store.Command] = msg match {
     case Get(replyTo, key) =>
-      val keyAsString = new String(key.toArray)
-      context.log.info(s"Received message to get key: $keyAsString")
       val value = data.get(key)
       if (value.isEmpty) {
-        context.log.info(s"Value of key $keyAsString not found")
+        replyTo ! Error(key)
         Behaviors.same
       } else {
         replyTo ! ByteSeq(value.get)
         Behaviors.same
       }
     case Set(replyTo, key, value) =>
-      val keyAsString = new String(key.toArray)
-      val valueAsString = new String(value.toArray)
-      context.log.info(s"Received message to set values: key: $keyAsString, value: $valueAsString")
       data.addOne(key, value)
       replyTo ! ByteSeq(data(key))
       Behaviors.same

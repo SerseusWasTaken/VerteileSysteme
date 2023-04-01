@@ -26,7 +26,6 @@ class FileReader(context: ActorContext[FileReader.Message]) extends AbstractBeha
 
   override def onMessage(msg: FileReader.Message): Behavior[FileReader.Message] = msg match {
     case File(filename, client) =>
-      context.log.info(s"Recieved message to read file $filename")
       val scanner = new Scanner(new io.FileReader(filename))
       while(scanner.hasNext()) {
         val sep = scanner.nextLine().split(",")

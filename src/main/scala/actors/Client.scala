@@ -21,12 +21,10 @@ object Client {
 class Client(val store: ActorRef[Store.Command], context: ActorContext[Command]) extends AbstractBehavior[Command](context) {
   override def onMessage(msg: Command): Behavior[Command] = msg match {
     case Get(key) =>
-      context.log.info(s"Recieved command to get key: $key")
       val consumer = context.spawnAnonymous(Consumer())
       store ! Store.Get(consumer, stringToByteSeq(key))
       Behaviors.same
     case Set(key, value) =>
-      context.log.info(s"Recieved command to add values key: $key and value: $value")
       val consumer = context.spawnAnonymous(Consumer())
       store ! Store.Set(consumer, stringToByteSeq(key), stringToByteSeq(value))
       Behaviors.same

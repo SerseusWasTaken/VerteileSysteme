@@ -16,7 +16,7 @@ object Guard {
       client1 ! Client.Get("IT")
       val reader = context.spawn(FileReader(), "reader")
       val filename = "trip_data_1000_000.csv"
-      reader ! FileReader.File(filename, client1)
+      //reader ! FileReader.File(filename, client1)
       Behaviors.same
     }
   }

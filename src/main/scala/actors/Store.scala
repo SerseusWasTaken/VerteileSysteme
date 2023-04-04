@@ -2,7 +2,7 @@ package actors
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import Consumer.{ByteSeq, Error, Result}
+import Consumer.{ConsumeGet, ConsumeSet, Error, Result}
 
 object Store {
   sealed trait Command
@@ -31,12 +31,12 @@ class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store
         replyTo ! Error(key)
         Behaviors.same
       } else {
-        replyTo ! ByteSeq(value.get)
+        replyTo ! ConsumeGet(key, value.get)
         Behaviors.same
       }
     case Set(replyTo, key, value) =>
       data.addOne(key, value)
-      replyTo ! ByteSeq(data(key))
+      replyTo ! ConsumeSet(key, data(key))
       Behaviors.same
   }
 }

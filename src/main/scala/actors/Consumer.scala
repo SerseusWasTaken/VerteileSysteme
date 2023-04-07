@@ -7,6 +7,7 @@ object Consumer {
   sealed trait Result
   case class ConsumeGet(key: Seq[Byte], value: Seq[Byte]) extends Result
   case class ConsumeSet(key: Seq[Byte], value: Seq[Byte]) extends Result
+  case class ConsumeSize(size: Int) extends Result
   case class Error(key: Seq[Byte]) extends Result
   def apply(): Behavior[Consumer.Result] = {
     Behaviors.setup { context =>
@@ -26,6 +27,9 @@ class Consumer(context: ActorContext[Consumer.Result]) extends AbstractBehavior[
       val keyAsString = new String(key.toArray)
       val valueAsString = new String(value.toArray)
       context.log.info(s"Value of key $keyAsString is $valueAsString")
+      Behaviors.same
+    case ConsumeSize(size) =>
+      context.log.info(s"Number of values in store: $size")
       Behaviors.same
     case Error(key) =>
       val result = new String(key.toArray)

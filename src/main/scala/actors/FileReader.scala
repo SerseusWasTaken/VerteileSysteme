@@ -13,23 +13,26 @@ object FileReader {
 
   case class File(filename: String, client: ActorRef[Client.Command]) extends Message
 
-  def apply(): Behavior[FileReader.Message] = {
+  def apply(batchSize: Int): Behavior[FileReader.Message] = {
     Behaviors.setup { context =>
-      new FileReader(context)
+      new FileReader(batchSize, context)
     }
   }
 }
 
-class FileReader(context: ActorContext[FileReader.Message]) extends AbstractBehavior[FileReader.Message](context) {
+class FileReader(batchSize: Int ,context: ActorContext[FileReader.Message]) extends AbstractBehavior[FileReader.Message](context) {
 
   import FileReader._
 
   override def onMessage(msg: FileReader.Message): Behavior[FileReader.Message] = msg match {
     case File(filename, client) =>
       val scanner = new Scanner(new io.FileReader(filename))
-      while(scanner.hasNext()) {
-        val sep = scanner.nextLine().split(",")
-        client ! Client.Set(sep(0), sep(1))
+      val range = 0 until batchSize
+      for (n <- range) {
+        if (scanner.hasNext()) {
+          val sep = scanner.nextLine().split(",")
+          client ! Client.Set(sep(0), sep(1))
+        }
       }
       scanner.close()
       Behaviors.same

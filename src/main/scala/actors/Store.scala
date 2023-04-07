@@ -2,7 +2,7 @@ package actors
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import Consumer.{ConsumeGet, ConsumeSet, Error, Result}
+import Consumer.{ConsumeGet, ConsumeSet, ConsumeSize, Error, Result}
 
 object Store {
   sealed trait Command
@@ -10,6 +10,7 @@ object Store {
   case class Get(replyTo: ActorRef[Result], key: Seq[Byte]) extends Command
 
   case class Set(replyTo: ActorRef[Result], key: Seq[Byte], value: Seq[Byte]) extends Command
+  case class Count(replyTo: ActorRef[Result]) extends Command
 
   def apply(): Behavior[Store.Command] = {
     Behaviors.setup { context =>
@@ -29,14 +30,16 @@ class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store
       val value = data.get(key)
       if (value.isEmpty) {
         replyTo ! Error(key)
-        Behaviors.same
       } else {
         replyTo ! ConsumeGet(key, value.get)
-        Behaviors.same
       }
+      Behaviors.same
     case Set(replyTo, key, value) =>
       data.addOne(key, value)
       replyTo ! ConsumeSet(key, data(key))
+      Behaviors.same
+    case Count(replyTo) =>
+      replyTo ! ConsumeSize(data.size)
       Behaviors.same
   }
 }

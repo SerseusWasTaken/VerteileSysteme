@@ -1,6 +1,6 @@
 package actors
 
-import actors.Client.{Command, Get, Set, Count}
+import actors.Client.{Command, Count, Get, Set}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
@@ -12,9 +12,10 @@ object Client {
   case class Set(key: String, value: String) extends Command
   case class Count() extends Command
 
-  def apply(consumer: ActorRef[Store.Command]): Behavior[Command] = {
+
+  def apply(store: ActorRef[Store.Command]): Behavior[Command] = {
     Behaviors.setup { context =>
-      new Client(consumer, context)
+      new Client(store, context)
     }
   }
 }

@@ -12,10 +12,26 @@ object Guard {
   def apply(): Behavior[Nothing] = {
     Behaviors.setup[Receptionist.Listing] { context =>
       context.spawnAnonymous(Store())
+      Behaviors.same
+
+      context.system.receptionist ! Receptionist.Subscribe(Store.storeServiceKey, context.self)
+      Behaviors.receiveMessagePartial[Receptionist.Listing]{
+        case Store.storeServiceKey.Listing(listings) =>
+          listings.foreach{ps =>
+            val client1 = context.spawnAnonymous(Client(ps))
+            val client2 = context.spawnAnonymous(Client(ps))
+            client1 ! Client.Set("IT", "Italia")
+            client2 ! Client.Get("IT")
+            client1 ! Client.Get("DE")
+            client1 ! Client.Get("IT")
+          }
+          Behaviors.same
+      }
 
 
+
+/*
       implicit val timeout: Timeout = Timeout.apply(100, TimeUnit.MILLISECONDS)
-
       context.ask(
         context.system.receptionist,
         Receptionist.Find(Store.storeServiceKey)
@@ -30,22 +46,8 @@ object Guard {
           client1 ! Client.Get("IT")
           value
       }
+ */
 
-      /*
-      val store = context.spawn(Store(), "the-store")
-      val client1 = context.spawn(Client(store), "client1")
-      val client2 = context.spawn(Client(store), "client2")
-      client1 ! Client.Set("IT", "Italia")
-      client2 ! Client.Get("IT")
-      client1 ! Client.Get("DE")
-      client1 ! Client.Get("IT")
-      val reader = context.spawn(FileReader(5), "reader")
-      val filename = "trip_data_1000_000.csv"
-      reader ! FileReader.File(filename, client1)
-
-       */
-
-      Behaviors.same
     }
   }.narrow
 }

@@ -9,7 +9,7 @@ import java.util.Scanner
 import scala.io.Source
 
 object FileReader {
-  sealed trait Message
+  sealed trait Message extends utils.Serializable
 
   case class File(filename: String, client: ActorRef[Client.Command]) extends Message
 

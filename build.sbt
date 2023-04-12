@@ -13,3 +13,6 @@ libraryDependencies += "com.typesafe.akka" %% "akka-actor-typed" % "2.8.0"
 libraryDependencies += "org.slf4j" % "slf4j-api" % "2.0.7"
 // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "2.0.7"
+// https://mvnrepository.com/artifact/com.typesafe.akka/akka-cluster-typed
+libraryDependencies += "com.typesafe.akka" %% "akka-cluster-typed" % "2.8.0"
+libraryDependencies += "com.typesafe.akka" %% "akka-serialization-jackson" % "2.8.0"

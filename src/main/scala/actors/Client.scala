@@ -5,7 +5,7 @@ import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
 object Client {
-  sealed trait Command
+  sealed trait Command extends utils.Serializable
 
   case class Get(key: String) extends Command
 

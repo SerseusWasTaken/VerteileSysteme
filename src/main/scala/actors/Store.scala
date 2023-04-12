@@ -8,7 +8,7 @@ import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import Store._
 
 object Store {
-  sealed trait Command
+  sealed trait Command extends utils.Serializable
 
   case class Get(replyTo: ActorRef[Result], key: Seq[Byte]) extends Command
 

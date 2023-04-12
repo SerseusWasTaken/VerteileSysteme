@@ -3,8 +3,10 @@ package actors
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
+import java.lang
+
 object Consumer {
-  sealed trait Result
+  sealed trait Result extends utils.Serializable
   case class ConsumeGet(key: Seq[Byte], value: Seq[Byte]) extends Result
   case class ConsumeSet(key: Seq[Byte], value: Seq[Byte]) extends Result
   case class ConsumeSize(size: Int) extends Result

@@ -33,12 +33,10 @@ class FileReader(batchSize: Int, context: ActorContext[FileReader.Message]) exte
   }
 
   private def withSourceApi(filename: String, client: ActorRef[Client.Command]) = Using(Source.fromFile(filename)) { source =>
-    source.getLines().grouped(batchSize).map(line => {
-      line.map(l => {
-        val actualLine = l.split(",")
-        (actualLine(0), actualLine(1))
-      })
-    }).foreach(group => {
+    source.getLines().map(line => {
+      val actualLine = line.split(",")
+      (actualLine(0), actualLine(1))
+    }).grouped(batchSize).foreach(group => {
       client ! Client.SetCollectionOfValues(group)
     })
   }
@@ -51,5 +49,3 @@ class FileReader(batchSize: Int, context: ActorContext[FileReader.Message]) exte
     str.grouped(batchSize).foreach(batch => client ! Client.SetCollectionOfValues(batch.toList))
   }
 }
-
-

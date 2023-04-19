@@ -1,9 +1,9 @@
 package actors
 
-import actors.Client.{Command, Count, Get, Set}
+import actors.Client.{Command, Count, Get, Set, clientServiceKey, Register}
+import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import akka.japi.Pair
 
 object Client {
   sealed trait Command extends utils.Serializable
@@ -11,8 +11,14 @@ object Client {
   case class Get(key: String) extends Command
 
   case class Set(key: String, value: String) extends Command
+
   case class SetCollectionOfValues(collection: Iterable[(String, String)]) extends Command
+
   case class Count() extends Command
+
+  case class Register() extends Command
+
+  val clientServiceKey: ServiceKey[Command] = ServiceKey[Command]("client")
 
   def apply(store: ActorRef[Store.Command]): Behavior[Command] = {
     Behaviors.setup { context =>
@@ -22,6 +28,8 @@ object Client {
 }
 
 class Client(val store: ActorRef[Store.Command], context: ActorContext[Command]) extends AbstractBehavior[Command](context) {
+  context.self ! Register()
+
   override def onMessage(msg: Command): Behavior[Command] = msg match {
     case Get(key: String) =>
       store ! Store.Get(getConsumer, stringToByteSeq(key))
@@ -34,6 +42,9 @@ class Client(val store: ActorRef[Store.Command], context: ActorContext[Command])
       Behaviors.same
     case Count() =>
       store ! Store.Count(getConsumer)
+      Behaviors.same
+    case Register() =>
+      context.system.receptionist ! Receptionist.register(clientServiceKey, context.self)
       Behaviors.same
   }
 

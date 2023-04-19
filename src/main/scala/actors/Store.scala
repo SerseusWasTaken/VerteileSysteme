@@ -14,11 +14,15 @@ object Store {
   case class Get(replyTo: ActorRef[Result], key: Seq[Byte]) extends Command
 
   case class Set(replyTo: ActorRef[Result], key: Seq[Byte], value: Seq[Byte]) extends Command
+
   case class SetCollectionOfValues(replyTo: ActorRef[Result], collection: Iterable[(Seq[Byte], Seq[Byte])]) extends Command
+
   case class Count(replyTo: ActorRef[Result]) extends Command
+
   case class Register() extends Command
 
   val storeServiceKey: ServiceKey[Command] = ServiceKey[Command]("store")
+
   def apply(): Behavior[Store.Command] = {
     Behaviors.setup { context =>
       new Store(context)

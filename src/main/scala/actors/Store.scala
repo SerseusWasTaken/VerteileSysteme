@@ -2,10 +2,11 @@ package actors
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import Consumer.{ConsumeGet, ConsumeSet, ConsumeSize, Error, Result}
+import Consumer.{ConsumeGet, ConsumeGroupSet, ConsumeSet, ConsumeSize, Error, Result}
 import actors.Store.Register
 import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import Store._
+import akka.japi.Pair
 
 object Store {
   sealed trait Command extends utils.Serializable
@@ -13,6 +14,7 @@ object Store {
   case class Get(replyTo: ActorRef[Result], key: Seq[Byte]) extends Command
 
   case class Set(replyTo: ActorRef[Result], key: Seq[Byte], value: Seq[Byte]) extends Command
+  case class SetCollectionOfValues(replyTo: ActorRef[Result], collection: Iterable[(Seq[Byte], Seq[Byte])]) extends Command
   case class Count(replyTo: ActorRef[Result]) extends Command
   case class Register() extends Command
 
@@ -38,6 +40,10 @@ class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store
     case Set(replyTo: ActorRef[Result], key: Seq[Byte], value: Seq[Byte]) =>
       data.addOne(key, value)
       replyTo ! ConsumeSet(key, data(key))
+      Behaviors.same
+    case SetCollectionOfValues(replyTo, collection) =>
+      data.addAll(collection)
+      replyTo ! ConsumeGroupSet(collection)
       Behaviors.same
     case Count(replyTo: ActorRef[Result]) =>
       replyTo ! ConsumeSize(data.size)

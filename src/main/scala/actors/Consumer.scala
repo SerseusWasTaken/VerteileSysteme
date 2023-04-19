@@ -10,6 +10,7 @@ object Consumer {
   sealed trait Result extends utils.Serializable
   case class ConsumeGet(key: Seq[Byte], value: Seq[Byte]) extends Result
   case class ConsumeSet(key: Seq[Byte], value: Seq[Byte]) extends Result
+  case class ConsumeGroupSet(collection: Iterable[(Seq[Byte], Seq[Byte])]) extends Result
   case class ConsumeSize(size: Int) extends Result
   case class Error(key: Seq[Byte]) extends Result
   def apply(): Behavior[Consumer.Result] = {
@@ -26,6 +27,9 @@ class Consumer(context: ActorContext[Consumer.Result]) extends AbstractBehavior[
       Behaviors.stopped
     case ConsumeSet(key: Seq[Byte], value: Seq[Byte]) =>
       context.log.info(s"Value of key ${byteSeqToString(key)} is ${byteSeqToString(value)}")
+      Behaviors.stopped
+    case ConsumeGroupSet(collection) =>
+      context.log.info(s"Set key/value pairs: ${collection.map(pair => {(byteSeqToString(pair._1), byteSeqToString(pair._2))})}")
       Behaviors.stopped
     case ConsumeSize(size: Int) =>
       context.log.info(s"Number of values in store: $size")

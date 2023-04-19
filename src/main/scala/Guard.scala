@@ -24,6 +24,8 @@ object Guard {
             client2 ! Client.Get("IT")
             client1 ! Client.Get("DE")
             client1 ! Client.Get("IT")
+            val fileReader = context.spawnAnonymous(FileReader(5))
+            fileReader ! FileReader.File("small.csv", client1)
           }
           Behaviors.same
       }

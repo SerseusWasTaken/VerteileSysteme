@@ -29,19 +29,17 @@ class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store
   private val data = scala.collection.mutable.Map[Seq[Byte], Seq[Byte]]()
 
   override def onMessage(msg: Store.Command): Behavior[Store.Command] = msg match {
-    case Get(replyTo, key) =>
-      val value = data.get(key)
-      if (value.isEmpty) {
-        replyTo ! Error(key)
-      } else {
-        replyTo ! ConsumeGet(key, value.get)
+    case Get(replyTo: ActorRef[Result], key: Seq[Byte]) =>
+      data.get(key) match {
+        case Some(value) => replyTo ! ConsumeGet(key, value)
+        case None => replyTo ! Error(key)
       }
       Behaviors.same
-    case Set(replyTo, key, value) =>
+    case Set(replyTo: ActorRef[Result], key: Seq[Byte], value: Seq[Byte]) =>
       data.addOne(key, value)
       replyTo ! ConsumeSet(key, data(key))
       Behaviors.same
-    case Count(replyTo) =>
+    case Count(replyTo: ActorRef[Result]) =>
       replyTo ! ConsumeSize(data.size)
       Behaviors.same
     case Register() =>
@@ -49,5 +47,3 @@ class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store
       Behaviors.same
   }
 }
-
-

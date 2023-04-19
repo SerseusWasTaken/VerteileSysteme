@@ -12,7 +12,6 @@ object Client {
   case class Set(key: String, value: String) extends Command
   case class Count() extends Command
 
-
   def apply(store: ActorRef[Store.Command]): Behavior[Command] = {
     Behaviors.setup { context =>
       new Client(store, context)
@@ -22,19 +21,19 @@ object Client {
 
 class Client(val store: ActorRef[Store.Command], context: ActorContext[Command]) extends AbstractBehavior[Command](context) {
   override def onMessage(msg: Command): Behavior[Command] = msg match {
-    case Get(key) =>
-      val consumer = context.spawnAnonymous(Consumer())
-      store ! Store.Get(consumer, stringToByteSeq(key))
+    case Get(key: String) =>
+      store ! Store.Get(getConsumer, stringToByteSeq(key))
       Behaviors.same
-    case Set(key, value) =>
-      val consumer = context.spawnAnonymous(Consumer())
-      store ! Store.Set(consumer, stringToByteSeq(key), stringToByteSeq(value))
+    case Set(key: String, value: String) =>
+      store ! Store.Set(getConsumer, stringToByteSeq(key), stringToByteSeq(value))
       Behaviors.same
     case Count() =>
-      val consumer = context.spawnAnonymous(Consumer())
-      store ! Store.Count(consumer)
+      store ! Store.Count(getConsumer)
       Behaviors.same
   }
+
+  private def getConsumer: ActorRef[Consumer.Result] =
+    context.spawnAnonymous(Consumer())
 
   private def stringToByteSeq(string: String) = string.toSeq.map { s => s.toByte }
 }

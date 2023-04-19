@@ -2,6 +2,7 @@ package actors
 
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import com.fasterxml.jackson.annotation.JsonTypeName
 
 import java.lang
 
@@ -20,22 +21,24 @@ object Consumer {
 class Consumer(context: ActorContext[Consumer.Result]) extends AbstractBehavior[Consumer.Result](context){
   import Consumer._
   override def onMessage(msg: Consumer.Result): Behavior[Consumer.Result] = msg match {
-    case ConsumeGet(key, value) =>
-      val keyAsString = new String(key.toArray)
-      val valueAsString = new String(value.toArray)
-      context.log.info(s"Set key $keyAsString to value $valueAsString")
-      Behaviors.same
-    case ConsumeSet(key, value) =>
-      val keyAsString = new String(key.toArray)
-      val valueAsString = new String(value.toArray)
-      context.log.info(s"Value of key $keyAsString is $valueAsString")
-      Behaviors.same
-    case ConsumeSize(size) =>
+    case ConsumeGet(key: Seq[Byte], value: Seq[Byte]) =>
+      context.log.info(s"Set key ${byteSeqToString(key)} to value ${byteSeqToString(value)}")
+      Behaviors.stopped
+    case ConsumeSet(key: Seq[Byte], value: Seq[Byte]) =>
+      context.log.info(s"Value of key ${byteSeqToString(key)} is ${byteSeqToString(value)}")
+      Behaviors.stopped
+    case ConsumeSize(size: Int) =>
       context.log.info(s"Number of values in store: $size")
-      Behaviors.same
-    case Error(key) =>
-      val result = new String(key.toArray)
-      context.log.info(s"Could not find key: $result")
-      Behaviors.same
+      Behaviors.stopped
+    case Error(key: Seq[Byte]) =>
+      context.log.info(s"Could not find key: ${byteSeqToString(key)}")
+      Behaviors.stopped
+  }
+
+  private def byteSeqToString(key: Seq[Byte]) = {
+    new String (key match {
+      case x: Seq[Integer] => x.map(s => s.byteValue()).toArray
+      case x: Seq[Byte] => x.toArray
+    })
   }
 }

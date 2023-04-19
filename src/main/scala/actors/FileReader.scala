@@ -25,7 +25,7 @@ class FileReader(batchSize: Int ,context: ActorContext[FileReader.Message]) exte
   import FileReader._
 
   override def onMessage(msg: FileReader.Message): Behavior[FileReader.Message] = msg match {
-    case File(filename, client) =>
+    case File(filename: String, client: ActorRef[Client.Command]) =>
       val scanner = new Scanner(new io.FileReader(filename))
       val range = 0 until batchSize
       for (n <- range) {

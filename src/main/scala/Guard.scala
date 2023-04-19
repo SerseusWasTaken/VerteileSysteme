@@ -15,9 +15,9 @@ object Guard {
       Behaviors.same
 
       context.system.receptionist ! Receptionist.Subscribe(Store.storeServiceKey, context.self)
-      Behaviors.receiveMessagePartial[Receptionist.Listing]{
+      Behaviors.receiveMessagePartial[Receptionist.Listing] {
         case Store.storeServiceKey.Listing(listings) =>
-          listings.foreach{ps =>
+          listings.foreach { ps =>
             val client1 = context.spawnAnonymous(Client(ps))
             val client2 = context.spawnAnonymous(Client(ps))
             client1 ! Client.Set("IT", "Italia")
@@ -27,27 +27,6 @@ object Guard {
           }
           Behaviors.same
       }
-
-
-
-/*
-      implicit val timeout: Timeout = Timeout.apply(100, TimeUnit.MILLISECONDS)
-      context.ask(
-        context.system.receptionist,
-        Receptionist.Find(Store.storeServiceKey)
-      ) {
-        case Success(value) =>
-          val store = value.serviceInstances(Store.storeServiceKey).head
-          val client1 = context.spawn(Client(store), "client1")
-          val client2 = context.spawn(Client(store), "client2")
-          client1 ! Client.Set("IT", "Italia")
-          client2 ! Client.Get("IT")
-          client1 ! Client.Get("DE")
-          client1 ! Client.Get("IT")
-          value
-      }
- */
-
     }
   }.narrow
 }

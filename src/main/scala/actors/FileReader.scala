@@ -28,24 +28,15 @@ class FileReader(batchSize: Int, context: ActorContext[FileReader.Message]) exte
 
   override def onMessage(msg: FileReader.Message): Behavior[FileReader.Message] = msg match {
     case File(filename: String, client: ActorRef[Client.Command]) =>
-      withSourceApi(filename, client)
+      Using(Source.fromFile(filename)) { source =>
+        source.getLines().map(line => {
+          val actualLine = line.split(",")
+          (actualLine(0), actualLine(1))
+        }).grouped(batchSize).foreach(group => {
+          client ! Client.SetCollectionOfValues(group)
+        })
+      }
       Behaviors.same
   }
 
-  private def withSourceApi(filename: String, client: ActorRef[Client.Command]) = Using(Source.fromFile(filename)) { source =>
-    source.getLines().map(line => {
-      val actualLine = line.split(",")
-      (actualLine(0), actualLine(1))
-    }).grouped(batchSize).foreach(group => {
-      client ! Client.SetCollectionOfValues(group)
-    })
-  }
-
-  private def withScanner(filename: String, client: ActorRef[Client.Command]) = Using(new Scanner(new io.FileReader(filename))) { scanner =>
-    val str = LazyList.continually({
-      val line = scanner.nextLine().split(",")
-      (line(0), line(1))
-    }).takeWhile(_ => scanner.hasNext())
-    str.grouped(batchSize).foreach(batch => client ! Client.SetCollectionOfValues(batch.toList))
-  }
 }

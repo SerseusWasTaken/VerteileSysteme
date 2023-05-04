@@ -32,8 +32,9 @@ object Guard {
             client ! Client.Get("IT")
             client ! Client.Get("DE")
             client ! Client.Get("IT")
+            client ! Client.Count()
             val fileReader = context.spawnAnonymous(FileReader(5))
-            //fileReader ! FileReader.File("small.csv", client)
+            //fileReader ! FileReader.File("trip_data_1000_000.csv", client)
           }
           Behaviors.same
       }

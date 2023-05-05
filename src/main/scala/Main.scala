@@ -5,8 +5,8 @@ import java.util.Scanner
 
 object Main {
   def main(args: Array[String]): Unit = {
-    runWithPort(args(0).toInt)
-    //runOnSameJVM()
+    //runWithPort(args(0).toInt)
+    runOnSameJVM()
 
     val scanner = new Scanner(System.in)
     scanner.next()

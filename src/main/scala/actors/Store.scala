@@ -2,11 +2,12 @@ package actors
 
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import Consumer.{ConsumeGet, ConsumeGroupSet, ConsumeSet, ConsumeSize, Error, Result}
+import Consumer.Result
 import actors.Store.Register
 import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import Store._
-import akka.japi.Pair
+import akka.cluster.sharding.typed.scaladsl.ClusterSharding
+import utils.Utils
 
 object Store {
   sealed trait Command extends utils.Serializable
@@ -17,43 +18,46 @@ object Store {
 
   case class SetCollectionOfValues(replyTo: ActorRef[Result], collection: Iterable[(Seq[Byte], Seq[Byte])]) extends Command
 
+  case class GetCollectionOfValues(replyTo: ActorRef[Result], keys: Iterable[Seq[Byte]]) extends Command
+
   case class Count(replyTo: ActorRef[Result]) extends Command
 
   case class Register() extends Command
 
   val storeServiceKey: ServiceKey[Command] = ServiceKey[Command]("store")
 
-  def apply(): Behavior[Store.Command] = {
+  def apply(sharding: ClusterSharding, numberOfEntities: Int): Behavior[Store.Command] = {
     Behaviors.setup { context =>
-      new Store(context)
+      new Store(context, sharding, numberOfEntities )
     }
   }
 }
 
-class Store(context: ActorContext[Store.Command]) extends AbstractBehavior[Store.Command](context) {
+class Store(context: ActorContext[Store.Command], sharding: ClusterSharding, numberOfEntities: Int) extends AbstractBehavior[Store.Command](context) {
   context.self ! Register()
-  private val data = scala.collection.mutable.Map[Seq[Byte], Seq[Byte]]()
 
   override def onMessage(msg: Store.Command): Behavior[Store.Command] = msg match {
     case Get(replyTo: ActorRef[Result], key: Seq[Byte]) =>
-      data.get(key) match {
-        case Some(value) => replyTo ! ConsumeGet(key, value)
-        case None => replyTo ! Error(key)
-      }
+      getStoreShard(key) ! StoreShard.Get(replyTo, key)
       Behaviors.same
     case Set(replyTo: ActorRef[Result], key: Seq[Byte], value: Seq[Byte]) =>
-      data.addOne(key, value)
-      replyTo ! ConsumeSet(key, data(key))
+      getStoreShard(key) ! StoreShard.Set(replyTo, key, value)
       Behaviors.same
     case SetCollectionOfValues(replyTo, collection) =>
-      data.addAll(collection)
-      replyTo ! ConsumeGroupSet(collection)
+      collection.foreach(tuple => getStoreShard(tuple._1) ! StoreShard.Set(replyTo, tuple._1, tuple._2))
+      Behaviors.same
+    case GetCollectionOfValues(replyTo, keys) =>
+      keys.foreach(key => getStoreShard(key) ! StoreShard.Get(replyTo, key))
       Behaviors.same
     case Count(replyTo: ActorRef[Result]) =>
-      replyTo ! ConsumeSize(data.size)
       Behaviors.same
     case Register() =>
       context.system.receptionist ! Receptionist.register(storeServiceKey, context.self)
       Behaviors.same
+  }
+
+  private def getStoreShard(key: Seq[Byte]) = {
+    val shardId = Math.floorMod(Utils.byteSeqToString(key).hashCode, numberOfEntities)
+    sharding.entityRefFor(StoreShard.TypeKey, s"Shard$shardId")
   }
 }

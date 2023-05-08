@@ -2,9 +2,7 @@ package actors
 
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import com.fasterxml.jackson.annotation.JsonTypeName
-
-import java.lang
+import utils.Utils
 
 object Consumer {
   sealed trait Result extends utils.Serializable
@@ -23,26 +21,20 @@ class Consumer(context: ActorContext[Consumer.Result]) extends AbstractBehavior[
   import Consumer._
   override def onMessage(msg: Consumer.Result): Behavior[Consumer.Result] = msg match {
     case ConsumeGet(key: Seq[Byte], value: Seq[Byte]) =>
-      context.log.info(s"Set key ${byteSeqToString(key)} to value ${byteSeqToString(value)}")
+      context.log.info(s"Value of key ${Utils.byteSeqToString(key)} is ${Utils.byteSeqToString(value)}")
       Behaviors.stopped
     case ConsumeSet(key: Seq[Byte], value: Seq[Byte]) =>
-      context.log.info(s"Value of key ${byteSeqToString(key)} is ${byteSeqToString(value)}")
+      context.log.info(s"Set key ${Utils.byteSeqToString(key)} to value ${Utils.byteSeqToString(value)}")
       Behaviors.stopped
     case ConsumeGroupSet(collection) =>
-      context.log.info(s"Set key/value pairs: ${collection.map(pair => {(byteSeqToString(pair._1), byteSeqToString(pair._2))})}")
+      context.log.info(s"Set key/value pairs: ${collection.map(pair => {(Utils.byteSeqToString(pair._1), Utils.byteSeqToString(pair._2))})}")
       Behaviors.stopped
     case ConsumeSize(size: Int) =>
       context.log.info(s"Number of values in store: $size")
       Behaviors.stopped
     case Error(key: Seq[Byte]) =>
-      context.log.info(s"Could not find key: ${byteSeqToString(key)}")
+      context.log.info(s"Could not find key: ${Utils.byteSeqToString(key)}")
       Behaviors.stopped
   }
 
-  private def byteSeqToString(key: Seq[Byte]) = {
-    new String (key match {
-      case x: Seq[Integer] => x.map(s => s.byteValue()).toArray
-      case x: Seq[Byte] => x.toArray
-    })
-  }
 }

@@ -2,7 +2,7 @@ import actors.StoreShard.TypeKey
 import actors.{Client, FileReader, Store, StoreShard}
 import akka.actor.typed.Behavior
 import akka.actor.typed.receptionist.Receptionist
-import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity}
 
 object Guard {
@@ -10,14 +10,11 @@ object Guard {
   def apply(): Behavior[Nothing] = {
     Behaviors.setup[Receptionist.Listing] { context =>
 
-      val sharding = ClusterSharding(context.system)
-      sharding.init(Entity(TypeKey) { entityContext =>
-        StoreShard(entityContext.entityId)
-      }.withRole("storeShard"))
+      val sharding = initializeSharding(context)
 
       context.system.settings.config.getInt("akka.remote.artery.canonical.port") match {
         case 25251 =>
-          context.spawnAnonymous(Store(sharding, 5))
+          context.spawnAnonymous(Store(sharding,5))
         case 25252 =>
           context.system.receptionist ! Receptionist.Subscribe(Client.clientServiceKey, context.self)
         case 25253 =>
@@ -33,12 +30,20 @@ object Guard {
         case Client.clientServiceKey.Listing(listings) =>
           listings.foreach { client =>
             val fileReader = context.spawnAnonymous(FileReader())
-            fileReader ! FileReader.File("trip_data_1000_000.csv", 10, client)
+            fileReader ! FileReader.FileUnbatched("trip_data_1000_000.csv", 1000, client)
           }
           Behaviors.same
       }
     }
   }.narrow
+
+  private def initializeSharding(context: ActorContext[_]): ClusterSharding = {
+    val sharding = ClusterSharding(context.system)
+    sharding.init(Entity(TypeKey) { entityContext =>
+      StoreShard(entityContext.entityId)
+    }.withRole("storeShard"))
+    sharding
+  }
 }
 
 

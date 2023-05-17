@@ -36,5 +36,4 @@ class Consumer(context: ActorContext[Consumer.Result]) extends AbstractBehavior[
       context.log.info(s"Could not find key: ${Utils.byteSeqToString(key)}")
       Behaviors.stopped
   }
-
 }

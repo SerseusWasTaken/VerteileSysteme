@@ -27,7 +27,6 @@ object Main {
 
     val config3 = Utils.getConfig(25253)
     val system3 = ActorSystem[Nothing](Guard(), "hfu", config3)
-
   }
 
 }

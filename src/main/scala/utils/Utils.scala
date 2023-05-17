@@ -1,5 +1,9 @@
 package utils
 
+import actors.StoreShard
+import actors.StoreShard.TypeKey
+import akka.actor.typed.scaladsl.ActorContext
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity}
 import com.typesafe.config.{Config, ConfigFactory}
 
 object Utils {
@@ -13,6 +17,12 @@ object Utils {
       case x: Seq[Byte] => x.toArray
     })
   }
+
+  def initializeSharding(context: ActorContext[_]): ClusterSharding = {
+    val sharding = ClusterSharding(context.system)
+    sharding.init(Entity(TypeKey) { entityContext =>
+      StoreShard(entityContext.entityId)
+    }.withRole("storeShard"))
+    sharding
+  }
 }
-
-

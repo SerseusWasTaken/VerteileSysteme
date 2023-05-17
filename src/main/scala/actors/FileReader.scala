@@ -8,7 +8,6 @@ import scala.util.Using
 object FileReader {
   sealed trait Message extends utils.Serializable
 
-  case class FileUnbatched(filename: String, numberOfLines: Int, client: ActorRef[Client.Command]) extends Message
   case class FileBatched(filename: String, batchSize: Int, numberOfLines: Int, client: ActorRef[Client.Command]) extends Message
 
   def apply(): Behavior[FileReader.Message] = {
@@ -33,16 +32,5 @@ class FileReader(context: ActorContext[FileReader.Message]) extends AbstractBeha
         })
       }
       Behaviors.same
-    case FileUnbatched(filename: String, numberOfLines: Int, client: ActorRef[Client.Command]) =>
-      Using(Source.fromFile(filename)) { source =>
-        source.getLines().map(line => {
-          val actualLine = line.split(",")
-          (actualLine(0), actualLine(1))
-        }).take(numberOfLines).foreach(tuple => {
-          client ! Client.Set(tuple._1, tuple._2)
-        })
-      }
-      Behaviors.same
   }
-
 }

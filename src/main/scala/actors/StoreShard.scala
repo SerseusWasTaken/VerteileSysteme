@@ -36,6 +36,8 @@ class StoreShard(context: ActorContext[Command], wsid: String) extends AbstractB
     case StoreShard.Set(replyTo, key, value) =>
       data.addOne(key, value)
       replyTo ! Consumer.ConsumeSet(key, value)
+      if(context.system.settings.config.getBoolean("akka.demo-build"))
+        context.log.info(s"I am entity $wsid and now have size ${data.size}")
       Behaviors.same
   }
 }

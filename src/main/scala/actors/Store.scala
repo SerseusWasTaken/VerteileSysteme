@@ -7,7 +7,6 @@ import actors.Store.Register
 import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import Store._
 import akka.cluster.sharding.typed.scaladsl.ClusterSharding
-import jdk.jshell.spi.ExecutionControl.NotImplementedException
 import utils.Utils
 
 object Store {
@@ -36,7 +35,6 @@ object Store {
 
 class Store(context: ActorContext[Store.Command], sharding: ClusterSharding, numberOfEntities: Int) extends AbstractBehavior[Store.Command](context) {
   context.self ! Register()
-  context.log.info(s"Initialized store with numberOfEntities: $numberOfEntities")
 
   override def onMessage(msg: Store.Command): Behavior[Store.Command] = msg match {
     case Get(replyTo: ActorRef[Result], key: Seq[Byte]) =>
@@ -52,6 +50,7 @@ class Store(context: ActorContext[Store.Command], sharding: ClusterSharding, num
       keys.foreach(key => getStoreShard(key) ! StoreShard.Get(replyTo, key))
       Behaviors.same
     case Count(replyTo: ActorRef[Result]) =>
+      context.log.warn("Count is not implemented with sharding")
       Behaviors.same
     case Register() =>
       context.system.receptionist ! Receptionist.register(storeServiceKey, context.self)

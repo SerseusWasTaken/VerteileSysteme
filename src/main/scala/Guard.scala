@@ -29,8 +29,13 @@ object Guard {
           Behaviors.same
         case Client.clientServiceKey.Listing(listings) =>
           listings.foreach { client =>
+            client ! Client.Set("IT", "Italia")
+            client ! Client.Get("IT")
+            client ! Client.Get("DE")
+            client ! Client.Get("IT")
+            client ! Client.Set("Test", "1")
             val fileReader = context.spawnAnonymous(FileReader())
-            fileReader ! FileReader.FileUnbatched("trip_data_1000_000.csv", 1000, client)
+            fileReader ! FileReader.FileBatched("trip_data_1000_000.csv", 2, 10, client)
           }
           Behaviors.same
       }

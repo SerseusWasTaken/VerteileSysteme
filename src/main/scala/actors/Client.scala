@@ -1,9 +1,10 @@
 package actors
 
-import actors.Client.{Command, Count, Get, Set, clientServiceKey, Register}
+import actors.Client.{Command, Count, Get, Register, Set, clientServiceKey}
 import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import utils.Utils.stringToByteSeq
 
 object Client {
   sealed trait Command extends utils.Serializable
@@ -51,5 +52,4 @@ class Client(val store: ActorRef[Store.Command], context: ActorContext[Command])
   private def getConsumer: ActorRef[Consumer.Result] =
     context.spawnAnonymous(Consumer())
 
-  private def stringToByteSeq(string: String) = string.toSeq.map { s => s.toByte }
 }

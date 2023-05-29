@@ -25,4 +25,6 @@ object Utils {
     }.withRole("storeShard"))
     sharding
   }
+
+  def stringToByteSeq(string: String): Seq[Byte] = string.toSeq.map { s => s.toByte }
 }

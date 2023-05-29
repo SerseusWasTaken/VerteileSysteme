@@ -14,6 +14,7 @@ object StoreShard {
   case class Get(replyTo: ActorRef[Result], key: Seq[Byte]) extends Command
 
   case class Set(replyTo: ActorRef[Result], key: Seq[Byte], value: Seq[Byte]) extends Command
+  case class Count(replyTo: ActorRef[Result]) extends Command
 
   def apply(wsid: String): Behavior[Command] = {
     Behaviors.setup { context =>
@@ -38,6 +39,9 @@ class StoreShard(context: ActorContext[Command], wsid: String) extends AbstractB
       replyTo ! Consumer.ConsumeSet(key, value)
       if(context.system.settings.config.getBoolean("akka.demo-build"))
         context.log.info(s"I am entity $wsid and now have size ${data.size}")
+      Behaviors.same
+    case StoreShard.Count(replyTo) =>
+      replyTo ! Consumer.ConsumeSize(data.size)
       Behaviors.same
   }
 }

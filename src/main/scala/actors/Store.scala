@@ -7,7 +7,13 @@ import actors.Store.Register
 import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import Store._
 import akka.cluster.sharding.typed.scaladsl.ClusterSharding
+import akka.util.Timeout
 import utils.Utils
+
+import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration.DurationInt
+import scala.util.{Failure, Success}
+
 
 object Store {
   sealed trait Command extends utils.Serializable
@@ -50,7 +56,11 @@ class Store(context: ActorContext[Store.Command], sharding: ClusterSharding, num
       keys.foreach(key => getStoreShard(key) ! StoreShard.Get(replyTo, key))
       Behaviors.same
     case Count(replyTo: ActorRef[Result]) =>
-      context.log.warn("Count is not implemented with sharding")
+      implicit val timeout: Timeout = 5000.millis
+      val refs = Range(0, numberOfEntities).map(i => sharding.entityRefFor(StoreShard.TypeKey, s"Shard$i"))
+      val results = refs.map(entity => Await.result(entity.ask(StoreShard.Count), 5000.millis))
+      val sizes = results.map(result => result.asInstanceOf[Consumer.ConsumeSize].size)
+      replyTo ! Consumer.ConsumeSize(sizes.sum)
       Behaviors.same
     case Register() =>
       context.system.receptionist ! Receptionist.register(storeServiceKey, context.self)

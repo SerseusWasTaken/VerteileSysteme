@@ -2,6 +2,8 @@ import actors.{Client, FileReader, Store}
 import akka.actor.typed.Behavior
 import akka.actor.typed.receptionist.Receptionist
 import akka.actor.typed.scaladsl.Behaviors
+import api.{StoreGrpcService, StoreGrpcServer}
+import de.hfu.vs.protocol.SetRequest
 import utils.Utils
 
 object Guard {
@@ -24,17 +26,25 @@ object Guard {
         case Store.storeServiceKey.Listing(listings) =>
           listings.foreach { store =>
             context.spawnAnonymous(Client(store))
+            val service = new StoreGrpcService(store, context)
+            StoreGrpcServer.runService(service)
           }
           Behaviors.same
         case Client.clientServiceKey.Listing(listings) =>
           listings.foreach { client =>
+
             client ! Client.Set("IT", "Italia")
             client ! Client.Get("IT")
             client ! Client.Get("DE")
             client ! Client.Get("IT")
             client ! Client.Set("Test", "1")
+            client ! Client.Count()
+
+            /*
             val fileReader = context.spawnAnonymous(FileReader())
             fileReader ! FileReader.FileBatched("trip_data_1000_000.csv", 1, 10, client)
+
+             */
           }
           Behaviors.same
       }

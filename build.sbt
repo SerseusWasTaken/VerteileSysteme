@@ -25,6 +25,13 @@ libraryDependencies += "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % "0.11.
 // https://mvnrepository.com/artifact/io.grpc/grpc-netty
 libraryDependencies += "io.grpc" % "grpc-netty" % "1.55.1"
 
+val AkkaHttpVersion = "10.5.2"
+libraryDependencies ++= Seq(
+  "com.typesafe.akka" %% "akka-stream" % "2.8.0",
+  "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion
+)
+libraryDependencies += "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.2"
+
 
 Compile / PB.targets := Seq(
   scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"

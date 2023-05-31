@@ -1,28 +1,24 @@
 package api
 
-import io.grpc.ManagedChannelBuilder
 import de.hfu.vs.protocol.{GetRequest, GrpcClientGrpc, SetRequest}
+import io.grpc.ManagedChannelBuilder
 
-object StoreGrpcClient extends App {
-  val port = 8080
-  val host = "localhost"
+class StoreGrpcClient(port: Int, host: String) {
   val channel = ManagedChannelBuilder
     .forAddress(host, port)
     .usePlaintext()
     .asInstanceOf[ManagedChannelBuilder[_]]
     .build()
 
-  run()
-  def run(): Unit = {
-    val setReq = GrpcClientGrpc
-      .blockingStub(channel)
-      .set(SetRequest("DE", "Germanyy"))
-    println(setReq.value)
+  def get(req: GetRequest) =
+    GrpcClientGrpc.blockingStub(channel)
+      .get(req)
 
-    val getReq = GrpcClientGrpc
-      .blockingStub(channel)
-      .get(GetRequest("DE"))
+  def set(request: SetRequest) =
+    GrpcClientGrpc.blockingStub(channel)
+      .set(request)
+}
 
-    println(getReq.value)
-  }
+object StoreGrpcClient {
+  def apply(port: Int, host: String) = new StoreGrpcClient(port, host)
 }

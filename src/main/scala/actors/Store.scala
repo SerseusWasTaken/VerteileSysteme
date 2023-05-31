@@ -12,7 +12,6 @@ import utils.Utils
 
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.DurationInt
-import scala.util.{Failure, Success}
 
 
 object Store {
@@ -58,7 +57,7 @@ class Store(context: ActorContext[Store.Command], sharding: ClusterSharding, num
     case Count(replyTo: ActorRef[Result]) =>
       implicit val timeout: Timeout = 5000.millis
       val refs = Range(0, numberOfEntities).map(i => sharding.entityRefFor(StoreShard.TypeKey, s"Shard$i"))
-      val results = refs.map(entity => Await.result(entity.ask(StoreShard.Count), 5000.millis))
+      val results = refs.map(entity => Await.result(entity.ask(StoreShard.Count), 5000.millis)) //Blocking await
       val sizes = results.map(result => result.asInstanceOf[Consumer.ConsumeSize].size)
       replyTo ! Consumer.ConsumeSize(sizes.sum)
       Behaviors.same

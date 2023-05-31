@@ -7,16 +7,14 @@ import scala.concurrent.ExecutionContext
 
 object StoreGrpcServer extends {
   def runService(service: GrpcClient): Unit = {
-    val port = 8080
+    val port = 50051
     val host = "localhost"
-    val service = GrpcClient.bindService(service, ExecutionContext.global)
+    val defintion = GrpcClient.bindService(service, ExecutionContext.global)
     val server = ServerBuilder
       .forPort(port)
-      .addService(service)
+      .addService(defintion)
       .asInstanceOf[ServerBuilder[_]]
       .build()
       .start()
-
-    server.awaitTermination()
   }
 }

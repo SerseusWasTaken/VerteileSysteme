@@ -28,7 +28,6 @@ class StoreGrpcService(store: ActorRef[Store.Command], context: ActorContext[_])
           case Consumer.ConsumeSet(key, value) => SetReply(Utils.byteSeqToString(key), Utils.byteSeqToString(value))
           case Consumer.Error(key) => SetReply(Utils.byteSeqToString(key), null)
         })
-
     }
 
   override def get(request: GetRequest): Future[GetReply] =
@@ -42,7 +41,6 @@ class StoreGrpcService(store: ActorRef[Store.Command], context: ActorContext[_])
             case Consumer.Error(key) => GetReply(Utils.byteSeqToString(key), Option(null))
           }
         )
-
     }
 }
 

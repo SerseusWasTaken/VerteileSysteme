@@ -6,14 +6,11 @@ import akka.actor.typed.scaladsl.AskPattern.Askable
 import akka.http.scaladsl.server.{PathMatchers, Route}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes
-
 import scala.util.{Failure, Success}
 import akka.util.Timeout
-import utils.Utils
+import utils.{KeyValuePair, Utils}
 import scala.concurrent.duration.DurationInt
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-import spray.json.DefaultJsonProtocol._
-import spray.json.RootJsonFormat
 
 import scala.concurrent.ExecutionContext
 
@@ -23,10 +20,6 @@ class StoreRoutes(system: ActorSystem[_], store: ActorRef[Store.Command]) {
   implicit val timeout: Timeout = 5000.millis
   implicit val context: ActorSystem[_] = system
   implicit val scheduler: Scheduler = system.scheduler
-
-  final case class KeyValuePair(key: String, value: String)
-
-  implicit val keyValuePairFormat: RootJsonFormat[KeyValuePair] = jsonFormat2(KeyValuePair.apply)
 
   private def query(key: String) = store.ask(Store.Get(_, Utils.stringToByteSeq(key))).transform {
     case Failure(exception) =>
